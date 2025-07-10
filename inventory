@@ -1,0 +1,14 @@
+#jenkins ansible_host=jenkins-node01 ansible_connection=ssh ansible_user=root ansible_password=vishnu
+#mngd_host ansible_host=ansible-managed-host  ansible_connection=ssh ansible_user=root ansible_password=vishnu
+
+[ansibleServer]
+192.168.42.140
+
+[managedCentosHost]
+192.168.42.141
+
+[jenkins]
+192.168.42.144
+
+[rhelupgrade]
+192.168.42.145
