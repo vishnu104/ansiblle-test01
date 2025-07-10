@@ -1,0 +1,9 @@
+---
+- name: Verify Host Connectivity
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Ping all managed nodes
+      ansible.builtin.ping:
+
+#ansible-playbook -i your_inventory_file ping_playbook.yml
