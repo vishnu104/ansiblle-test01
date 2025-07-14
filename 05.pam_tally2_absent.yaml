@@ -1,0 +1,10 @@
+---
+- name: Remove pam_tally2 from PAM configs before RHEL 7 upgrade
+  hosts: all
+  become: true
+  tasks:
+    - name: Remove lines containing 'pam_tally2'
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/system-auth
+        regexp: pam_tally2
+        state: absent

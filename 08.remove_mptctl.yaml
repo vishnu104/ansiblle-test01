@@ -1,0 +1,14 @@
+---
+- name: Disable and stop mptctl service if it exists
+  hosts: all
+  become: true
+  tasks:
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Disable and stop mptctl service if present
+      ansible.builtin.service:
+        name: mptctl
+        enabled: false
+        state: stopped
+      when: "'mptctl.service' in ansible_facts.services"

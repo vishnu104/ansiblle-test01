@@ -1,0 +1,10 @@
+---
+- name: Add a line to yum.conf
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure 'exclude=kernel*' is present in /etc/yum.conf
+      ansible.builtin.lineinfile:
+        path: /etc/yum.conf
+        #line: 'exclude=kernel*'
+        line: 'exclude="{{ exclude_var }}"'

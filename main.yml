@@ -1,0 +1,77 @@
+---
+# tasks file for vishnu.rhelupgrade
+- name: Remove lines containing 'pam_tally2'
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/system-auth
+    regexp: pam_tally2
+    state: absent
+
+## Remove the floppy module upon throwing floppy errors during pre upgrade
+- name: Remove floppy module
+  ansible.builtin.command:
+    rmmod "{{module_floppy_var}}"
+    register: mod_floppy_result
+    ignore_errors: yes
+- debug:
+    var: mod_floppy_result
+
+## Remove Pata_acpi module upon throwing pata_acpi errors during pre upgrade
+- name: Remove pata_acpi module
+  ansible.builtin.command:
+    rmmod "{{module_pata_acpi_var}}"
+    register: mod_pata_acpi_result
+    ignore_errors: yes
+- debug:
+    var: mod_pata_acpi_result
+
+- name: Ensure 'exclude=kernel*' is present in /etc/yum.conf
+  ansible.builtin.lineinfile:
+    path: /etc/yum.conf
+    line: "{{exclude_var}}"
+    #line: 'exclude=kernel*'
+
+- name: touch a file to create as it won't exists
+  ansible.builtin.file:
+    path: /etc/modprobe.d/blacklistmptctl.conf
+    state: touch
+    force: false
+    path: /etc/modprobe.d/dev-sec.conf
+    state: touch
+    force: false
+
+- name: Ensure 'blacklist mptctl' is present in /etc/modprobe.d/blacklistmptctl.conf
+  ansible.builtin.lineinfile:
+    path: /etc/modprobe.d/blacklistmptctl.conf
+    line: 'blacklist mptctl'
+    state: present
+    path: /etc/modprobe.d/dev-sec.conf
+    line: 'install mptctl /bin/true'
+    state: present
+
+## enable root logn and add teh probit password as a commented line in the sshd_config file
+- name: Enable root login in sshd_config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^\s*#?\s*PermitRootLogin\s+.*'
+    line: 'PermitRootLogin yes'
+    state: present
+    backup: yes
+  notify: Restart ssh
+
+## add the PermitRootLogin prohibit-password
+- name: Set 'PermitRootLogin prohibit-password' in sshd_config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin\s+.*'
+    line: '#PermitRootLogin prohibit-password'
+    state: present
+    #validate: '/usr/sbin/sshd -t -f %s'
+  notify: Restart ssh
+
+#- name: remove_pam_pkcs11_module_check for leaap
+#  ansible.builtin.command:
+#    leapp answer --section "{{ module_pam_pkcs11_check }}"=True --add
+
+#- name: Confirm authselect_check for Leapp
+#  ansible.builtin.command:
+#    leapp answer --section "{{ module_authselect_check }}"=True --add

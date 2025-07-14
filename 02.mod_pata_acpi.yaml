@@ -1,0 +1,13 @@
+---
+- name: Remove modules befor upgrade
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Remove pata_acpi module
+      ansible.builtin.command: rmmod "{{ module_pata_acpi_var }}"
+      ignore_errors: true
+      register: mod_pata_acpi_result
+
+    - name: Print command result
+      ansible.builtin.debug:
+        msg: "{{ mod_pata_acpi_result.stdout_lines }}"

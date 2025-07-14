@@ -1,0 +1,7 @@
+---
+- name: Set Leapp answer for authselect_check.confirm
+  hosts: all
+  become: true
+  tasks:
+    - name: remove_pam_pkcs11_module_check for leaap
+      ansible.builtin.command: leapp answer --section "{{ module_pam_pkcs11_check }}"=True --add

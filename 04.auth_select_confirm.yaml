@@ -1,0 +1,7 @@
+---
+- name: Set Leapp answer for authselect_check.confirm
+  hosts: all
+  become: true
+  tasks:
+    - name: Confirm authselect_check for Leapp
+      ansible.builtin.command: leapp answer --section "{{ module_authselect_check }}"=True --add
