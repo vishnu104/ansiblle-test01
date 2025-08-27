@@ -1,0 +1,17 @@
+- name: Get AWS EC2 Instances with vaulted credentials
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - cred.yml
+  tasks:
+    - name: List EC2 instances
+      amazon.aws.ec2_instance_info:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: ap-southeast-2
+      register: ec2_instances
+
+    - name: Display EC2 instance IDs
+      debug:
+        msg: "{{ ec2_instances.instances | map(attribute='instance_id') | list }}"
+  

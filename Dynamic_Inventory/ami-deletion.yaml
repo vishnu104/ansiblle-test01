@@ -1,0 +1,53 @@
+- name: Delete AMI and snapshots for given EC2 instance name
+  hosts: localhost
+  gather_facts: no
+
+  vars_prompt:
+    - name: instance_name
+      prompt: "Enter the EC2 instance Name tag"
+
+  vars:
+    region: ap-southeast-2 # Change as needed
+
+  tasks:
+    - name: Find instance by Name tag
+      amazon.aws.ec2_instance_info:
+        region: "{{ region }}"
+        filters:
+          "tag:Name": "{{ instance_name }}"
+      register: instance_info
+
+    - name: Fail if instance not found
+      ansible.builtin.fail:
+        msg: "No EC2 instance found with Name '{{ instance_name }}'."
+      when: instance_info.instances | length == 0
+
+    - name: Collect all AMIs owned by me
+      amazon.aws.ec2_ami_info:
+        region: "{{ region }}"
+        owners: self
+      register: ami_info
+
+    - name: Find AMIs created from the instance
+      set_fact:
+        amis_to_delete: >-
+          {{ ami_info.images | selectattr('tags.SourceInstance', 'defined')
+                        | selectattr('tags.SourceInstance', 'eq', instance_info.instances[0].instance_id)
+                        | map(attribute='image_id') | list }}
+    - name: Display which AMIs will be deleted
+      debug:
+        msg: "AMI(s) to delete: {{ amis_to_delete }}"
+
+    - name: Delete AMI(s)
+      amazon.aws.ec2_ami:
+        image_id: "{{ item }}"
+        state: absent
+        region: "{{ region }}"
+        delete_snapshot: yes
+      loop: "{{ amis_to_delete }}"
+      when: amis_to_delete | length > 0
+
+    - name: Warn if no AMIs were matched
+      debug:
+        msg: "No AMIs associated with instance '{{ instance_name }}' were found."
+      when: amis_to_delete | length == 0
